@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="API/API.csproj" />
+  <Project Path="Application/Application.csproj" />
+  <Project Path="BlazorFrontend/BlazorFrontend.csproj" />
+  <Project Path="DataAccess/DataAccess.csproj" />
+  <Project Path="Domain/Domain.csproj" />
+  <Project Path="Implementation/Implementation.csproj" />
+  <Project Path="Tests/Tests.csproj" Id="1ebb47eb-245b-459b-b497-fd21418656e8" />
+</Solution>

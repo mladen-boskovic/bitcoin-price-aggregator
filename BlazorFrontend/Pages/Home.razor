@@ -1,0 +1,86 @@
+﻿@page "/"
+@inject PriceApiService PriceApi
+@using BlazorFrontend.Models
+@using BlazorFrontend.Services
+
+<h2>Bitcoin Price Aggregator</h2>
+
+<table style="border-collapse: collapse; margin-bottom: 1rem;">
+    <tr>
+        <td style="padding: 0.4rem 1rem 0.4rem 0;"><label>Instrument:</label></td>
+        <td style="padding: 0.4rem 0;">
+            <select @bind="instrument">
+                <option value="BTCUSD">BTC/USD</option>
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 0.4rem 1rem 0.4rem 0;"><label>Timestamp (UTC):</label></td>
+        <td style="padding: 0.4rem 0;">
+            <input type="datetime-local" @bind="timestamp" />
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" style="padding-top: 0.6rem;">
+            <button @onclick="FetchPrice" disabled="@isLoading">
+                @(isLoading ? "Loading..." : "Get Price")
+            </button>
+        </td>
+    </tr>
+</table>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color:red"><strong>Error:</strong> @errorMessage</p>
+}
+
+@if (result is not null)
+{
+    <hr />
+    <h3>@result.Instrument price at @result.TimestampUtc.ToString("yyyy-MM-dd HH:mm") UTC</h3>
+    <p><strong>Aggregated price:</strong> @result.AggregatedPrice.ToString("F2") USD</p>
+    <p><strong>Result source:</strong> @result.Source</p>
+    <h4>Source prices:</h4>
+    <ul>
+        @foreach (var (provider, price) in result.ProviderPrices)
+        {
+            <li>@provider: @price.ToString("F2")</li>
+        }
+    </ul>
+}
+
+@code {
+    private string instrument = "BTCUSD";
+    private DateTime timestamp = DateTime.UtcNow;
+    private PriceResponse? result;
+    private string errorMessage = string.Empty;
+    private bool isLoading;
+
+    private async Task FetchPrice()
+    {
+        errorMessage = string.Empty;
+        result = null;
+        isLoading = true;
+
+        try
+        {
+            result = await PriceApi.GetAggregatedPriceAsync(instrument, DateTime.SpecifyKind(timestamp, DateTimeKind.Utc));
+            if (result is null)
+            {
+                errorMessage = "No data returned from the API.";
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Unexpected error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
